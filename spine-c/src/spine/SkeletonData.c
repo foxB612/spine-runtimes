@@ -104,7 +104,7 @@ int spSkeletonData_findSlotIndex (const spSkeletonData* self, const char* slotNa
 spSkin* spSkeletonData_findSkin (const spSkeletonData* self, const char* skinName) {
 	int i;
 	for (i = 0; i < self->skinsCount; ++i)
-		if (strcmp(self->skins[i]->name, skinName) == 0) return self->skins[i];
+		if (NULL!=self->skins[i] && strcmp(self->skins[i]->name, skinName) == 0) return self->skins[i];
 	return 0;
 }
 

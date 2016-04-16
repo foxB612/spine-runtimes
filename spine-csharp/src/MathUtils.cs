@@ -90,5 +90,20 @@ namespace Spine {
 			atan = PI / 2 - z / (z * z + 0.28f);
 			return y < 0f ? atan - PI : atan;
 		}
+		
+		/// <summary>Returns sinus and cosinus in radians, faster than the lookup table (cache friendly) and more precise. 
+		/// See  quadratic curve to approximate  http://lab.polygonal.de/?p=205 </summary>
+        static public void SinCos (float x, out float sin, out float cos) 
+        {
+            const float term0 = 1.27323954f, term1 = 0.405284735f;
+            if (x < -PI) x += PI + PI; else if (x > PI) x -= PI + PI;
+            sin = x < 0 ? (term0 + term1 * x) * x : (term0 - term1 * x) * x;
+            x += PI * 0.5f; if (x > PI) x -= PI + PI;
+            cos = x < 0 ? (term0 + term1 * x) * x : (term0 - term1 * x) * x;
+        }
+        static public void SinCosDeg (float x, out float sin, out float cos) 
+        {
+        	SinCos(x * degRad, out sin, out cos);
+        }
 	}
 }

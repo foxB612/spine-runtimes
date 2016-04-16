@@ -60,12 +60,13 @@ void spBone_updateWorldTransform (spBone* self) {
 }
 
 void spBone_updateWorldTransformWith (spBone* self, float x, float y, float rotation, float scaleX, float scaleY) {
-	float radians = rotation * DEG_RAD;
-	float cosine = COS(radians);
-	float sine = SIN(radians);
-	float la = cosine * scaleX, lb = -sine * scaleY, lc = sine * scaleX, ld = cosine * scaleY;
-	float pa, pb, pc, pd, temp;
-	spBone* parent = self->parent;
+    float radians = rotation * DEG_RAD;
+    float cosine, sine;
+    float pa, pb, pc, pd, temp;
+    float la, lb, lc, ld;
+    spBone* parent = self->parent;
+    FSINCOS(radians, &sine, &cosine);
+    la = cosine * scaleX;   lb = -sine * scaleY; lc = sine * scaleX; ld = cosine * scaleY;
 
 	CONST_CAST(float, self->appliedRotation) = rotation;
 	CONST_CAST(float, self->appliedScaleX) = scaleX;
@@ -115,9 +116,8 @@ void spBone_updateWorldTransformWith (spBone* self, float x, float y, float rota
 			pc = 0;
 			pd = 1;
 			do {
-				cosine = COS(parent->appliedRotation * DEG_RAD);
-				sine = SIN(parent->appliedRotation * DEG_RAD);
-				temp = pa * cosine + pb * sine;
+                FSINCOS(parent->appliedRotation * DEG_RAD, &sine, &cosine);
+                temp = pa * cosine + pb * sine;
 				pb = pa * -sine + pb * cosine;
 				pa = temp;
 				temp = pc * cosine + pd * sine;
@@ -140,8 +140,7 @@ void spBone_updateWorldTransformWith (spBone* self, float x, float y, float rota
 				float za, zb, zc, zd;
 				float r = parent->rotation;
 				float psx = parent->appliedScaleX, psy = parent->appliedScaleY;
-				cosine = COS(r * DEG_RAD);
-				sine = SIN(r * DEG_RAD);
+				FSINCOS(r * DEG_RAD, &sine, &cosine);
 				za = cosine * psx;
 				zb = -sine * psy;
 				zc = sine * psx;
@@ -154,8 +153,7 @@ void spBone_updateWorldTransformWith (spBone* self, float x, float y, float rota
 				pc = temp;
 
 				if (psx < 0) r = -r;
-				cosine = COS(-r * DEG_RAD);
-				sine = SIN(-r * DEG_RAD);
+				FSINCOS(-r * DEG_RAD, &sine, &cosine);
 				temp = pa * cosine + pb * sine;
 				pb = pa * -sine + pb * cosine;
 				pa = temp;

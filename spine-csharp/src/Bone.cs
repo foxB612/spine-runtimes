@@ -102,7 +102,9 @@ namespace Spine {
 			appliedScaleX = scaleX;
 			appliedScaleY = scaleY;
 
-			float cos = MathUtils.CosDeg(rotation), sin = MathUtils.SinDeg(rotation);
+			float cos, sin;
+			MathUtils.SinCosDeg(rotation, out sin, out cos);
+			
 			float la = cos * scaleX, lb = -sin * scaleY, lc = sin * scaleX, ld = cos * scaleY;
 			Bone parent = this.parent;
 			if (parent == null) { // Root bone.
@@ -146,8 +148,8 @@ namespace Spine {
 					pc = 0;
 					pd = 1;
 					do {
-						cos = MathUtils.CosDeg(parent.appliedRotation);
-						sin = MathUtils.SinDeg(parent.appliedRotation);
+						MathUtils.SinCosDeg(parent.appliedRotation, out sin, out cos);
+			
 						float temp = pa * cos + pb * sin;
 						pb = pa * -sin + pb * cos;
 						pa = temp;
@@ -169,8 +171,8 @@ namespace Spine {
 					pd = 1;
 					do {
 						float r = parent.rotation;
-						cos = MathUtils.CosDeg(r);
-						sin = MathUtils.SinDeg(r);
+						MathUtils.SinCosDeg(parent.rotation, out sin, out cos);
+			
 						float psx = parent.appliedScaleX, psy = parent.appliedScaleY;
 						float za = cos * psx, zb = -sin * psy, zc = sin * psx, zd = cos * psy;
 						float temp = pa * za + pb * zc;

@@ -77,6 +77,15 @@
 #define ACOS(A) (float)acos(A)
 #endif
 
+static void inline FSINCOS(float x, float* s, float* c)
+{
+    const float term0 = 1.27323954f, term1 = 0.405284735f;
+    if (x < -PI) x += PI + PI; else if (x > PI) x -= PI + PI;
+    *s = x < 0 ? (term0 + term1 * x) * x : (term0 - term1 * x) * x;
+    x += PI * 0.5f; if (x > PI) x -= PI + PI;
+    *c = x < 0 ? (term0 + term1 * x) * x : (term0 - term1 * x) * x;
+}
+
 #define UNUSED(x) (void)(x)
 
 #include <stdlib.h>
