@@ -1,0 +1,13 @@
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine-windows-forms.csprojAssemblyReference.cache
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\SpineWindowsForms.Form1.resources
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine_windows_forms.Properties.Resources.resources
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine-windows-forms.csproj.GenerateResource.cache
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine-windows-forms.csproj.CoreCompileInputs.cache
+D:\Github\spine-runtimes\spine-windows-forms\bin\Debug\spine-windows-forms.exe.config
+D:\Github\spine-runtimes\spine-windows-forms\bin\Debug\spine-windows-forms.exe
+D:\Github\spine-runtimes\spine-windows-forms\bin\Debug\spine-windows-forms.pdb
+D:\Github\spine-runtimes\spine-windows-forms\bin\Debug\spine-csharp.dll
+D:\Github\spine-runtimes\spine-windows-forms\bin\Debug\spine-csharp.pdb
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine-windows-forms.csproj.CopyComplete
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine-windows-forms.exe
+D:\Github\spine-runtimes\spine-windows-forms\obj\Debug\spine-windows-forms.pdb

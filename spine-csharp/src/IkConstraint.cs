@@ -1,57 +1,58 @@
 /******************************************************************************
- * Spine Runtimes Software License
- * Version 2.3
- * 
- * Copyright (c) 2013-2015, Esoteric Software
- * All rights reserved.
- * 
- * You are granted a perpetual, non-exclusive, non-sublicensable and
- * non-transferable license to use, install, execute and perform the Spine
- * Runtimes Software (the "Software") and derivative works solely for personal
- * or internal use. Without the written permission of Esoteric Software (see
- * Section 2 of the Spine Software License Agreement), you may not (a) modify,
- * translate, adapt or otherwise create derivative works, improvements of the
- * Software or develop new applications using the Software or (b) remove,
- * delete, alter or obscure any trademarks or any copyright, trademark, patent
- * or other intellectual property or proprietary rights notices on or in the
- * Software, including any copy thereof. Redistributions in binary or source
- * form must include this license and terms.
- * 
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Spine Runtimes License Agreement
+ * Last updated May 1, 2019. Replaces all prior versions.
+ *
+ * Copyright (c) 2013-2019, Esoteric Software LLC
+ *
+ * Integration of the Spine Runtimes into software or otherwise creating
+ * derivative works of the Spine Runtimes is permitted under the terms and
+ * conditions of Section 2 of the Spine Editor License Agreement:
+ * http://esotericsoftware.com/spine-editor-license
+ *
+ * Otherwise, it is permitted to integrate the Spine Runtimes into software
+ * or otherwise create derivative works of the Spine Runtimes (collectively,
+ * "Products"), provided that each user of the Products must obtain their own
+ * Spine Editor license and redistribution of the Products in any form must
+ * include this license and copyright notice.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+ * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
+ * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 using System;
-using System.Collections.Generic;
 
 namespace Spine {
-	public class IkConstraint : IUpdatable {
+	/// <summary>
+	/// <para>
+	/// Stores the current pose for an IK constraint. An IK constraint adjusts the rotation of 1 or 2 constrained bones so the tip of
+	/// the last bone is as close to the target bone as possible.</para>
+	/// <para>
+	/// See <a href="http://esotericsoftware.com/spine-ik-constraints">IK constraints</a> in the Spine User Guide.</para>
+	/// </summary>
+	public class IkConstraint : IConstraint {
 		internal IkConstraintData data;
 		internal ExposedList<Bone> bones = new ExposedList<Bone>();
 		internal Bone target;
 		internal int bendDirection;
-		internal float mix;
-
-		public IkConstraintData Data { get { return data; } }
-		public ExposedList<Bone> Bones { get { return bones; } }
-		public Bone Target { get { return target; } set { target = value; } }
-		public int BendDirection { get { return bendDirection; } set { bendDirection = value; } }
-		public float Mix { get { return mix; } set { mix = value; } }
+		internal bool compress, stretch;
+		internal float mix = 1;
 
 		public IkConstraint (IkConstraintData data, Skeleton skeleton) {
-			if (data == null) throw new ArgumentNullException("data cannot be null.");
-			if (skeleton == null) throw new ArgumentNullException("skeleton cannot be null.");
+			if (data == null) throw new ArgumentNullException("data", "data cannot be null.");
+			if (skeleton == null) throw new ArgumentNullException("skeleton", "skeleton cannot be null.");
 			this.data = data;
 			mix = data.mix;
 			bendDirection = data.bendDirection;
+			compress = data.compress;
+			stretch = data.stretch;
 
 			bones = new ExposedList<Bone>(data.bones.Count);
 			foreach (BoneData boneData in data.bones)
@@ -59,46 +60,127 @@ namespace Spine {
 			target = skeleton.FindBone(data.target.name);
 		}
 
-		public void Update () {
-			Apply();
+		/// <summary>Copy constructor.</summary>
+		public IkConstraint (IkConstraint constraint, Skeleton skeleton) {
+			if (constraint == null) throw new ArgumentNullException("constraint cannot be null.");
+			if (skeleton == null) throw new ArgumentNullException("skeleton cannot be null.");
+			data = constraint.data;
+			bones = new ExposedList<Bone>(constraint.Bones.Count);
+			foreach (Bone bone in constraint.Bones)
+				bones.Add(skeleton.Bones.Items[bone.data.index]);
+			target = skeleton.Bones.Items[constraint.target.data.index];
+			mix = constraint.mix;
+			bendDirection = constraint.bendDirection;
+			compress = constraint.compress;
+			stretch = constraint.stretch;
 		}
 
+		/// <summary>Applies the constraint to the constrained bones.</summary>
 		public void Apply () {
+			Update();
+		}
+
+		public void Update () {
 			Bone target = this.target;
 			ExposedList<Bone> bones = this.bones;
 			switch (bones.Count) {
 			case 1:
-				Apply(bones.Items[0], target.worldX, target.worldY, mix);
+				Apply(bones.Items[0], target.worldX, target.worldY, compress, stretch, data.uniform, mix);
 				break;
 			case 2:
-				Apply(bones.Items[0], bones.Items[1], target.worldX, target.worldY, bendDirection, mix);
+				Apply(bones.Items[0], bones.Items[1], target.worldX, target.worldY, bendDirection, stretch, mix);
 				break;
 			}
 		}
 
-		override public String ToString () {
+
+		public int Order {
+			get { return data.order; }
+		}
+
+		/// <summary>The bones that will be modified by this IK constraint.</summary>
+		public ExposedList<Bone> Bones {
+			get { return bones; }
+		}
+
+		/// <summary>The bone that is the IK target.</summary>
+		public Bone Target {
+			get { return target; }
+			set { target = value; }
+		}
+
+		/// <summary>A percentage (0-1) that controls the mix between the constrained and unconstrained rotations.</summary>
+		public float Mix {
+			get { return mix; }
+			set { mix = value; }
+		}
+
+		/// <summary>Controls the bend direction of the IK bones, either 1 or -1.</summary>
+		public int BendDirection {
+			get { return bendDirection; }
+			set { bendDirection = value; }
+		}
+
+		/// <summary>
+		/// When true and only a single bone is being constrained, if the target is too close, the bone is scaled to reach it.</summary>
+		public bool Compress {
+			get { return compress; }
+			set { compress = value; }
+		}
+
+		/// <summary>
+		///  When true, if the target is out of range, the parent bone is scaled to reach it. If more than one bone is being constrained
+		///  and the parent bone has local nonuniform scale, stretch is not applied.</summary>
+		public bool Stretch {
+			get { return stretch; }
+			set { stretch = value; }
+		}
+
+		/// <summary>The IK constraint's setup pose data.</summary>
+		public IkConstraintData Data {
+			get { return data; }
+		}
+
+		override public string ToString () {
 			return data.name;
 		}
 
-		/// <summary>Adjusts the bone rotation so the tip is as close to the target position as possible. The target is specified
-		/// in the world coordinate system.</summary>
-		static public void Apply (Bone bone, float targetX, float targetY, float alpha) {
-			float parentRotation = bone.parent == null ? 0 : bone.parent.WorldRotationX;
-			float rotation = bone.rotation;
-			float rotationIK = MathUtils.Atan2(targetY - bone.worldY, targetX - bone.worldX) * MathUtils.radDeg - parentRotation;
-			if ((bone.worldSignX != bone.worldSignY) != (bone.skeleton.flipX != (bone.skeleton.flipY != Bone.yDown)))
-				rotationIK = 360 - rotationIK;
-			if (rotationIK > 180) rotationIK -= 360;
-			else if (rotationIK < -180) rotationIK += 360;
-			bone.UpdateWorldTransform(bone.x, bone.y, rotation + (rotationIK - rotation) * alpha, bone.appliedScaleX, bone.appliedScaleY);
+		/// <summary>Applies 1 bone IK. The target is specified in the world coordinate system.</summary>
+		static public void Apply (Bone bone, float targetX, float targetY, bool compress, bool stretch, bool uniform,
+								float alpha) {
+			if (!bone.appliedValid) bone.UpdateAppliedTransform();
+			Bone p = bone.parent;
+			float id = 1 / (p.a * p.d - p.b * p.c);
+			float x = targetX - p.worldX, y = targetY - p.worldY;
+			float tx = (x * p.d - y * p.b) * id - bone.ax, ty = (y * p.a - x * p.c) * id - bone.ay;
+			float rotationIK = (float)Math.Atan2(ty, tx) * MathUtils.RadDeg - bone.ashearX - bone.arotation;
+			if (bone.ascaleX < 0) rotationIK += 180;
+			if (rotationIK > 180)
+				rotationIK -= 360;
+			else if (rotationIK < -180) //
+				rotationIK += 360;
+			float sx = bone.ascaleX, sy = bone.ascaleY;
+			if (compress || stretch) {
+				float b = bone.data.length * sx, dd = (float)Math.Sqrt(tx * tx + ty * ty);
+				if ((compress && dd < b) || (stretch && dd > b) && b > 0.0001f) {
+					float s = (dd / b - 1) * alpha + 1;
+					sx *= s;
+					if (uniform) sy *= s;
+				}
+			}
+			bone.UpdateWorldTransform(bone.ax, bone.ay, bone.arotation + rotationIK * alpha, sx, sy, bone.ashearX, bone.ashearY);
 		}
 
-		/// <summary>Adjusts the parent and child bone rotations so the tip of the child is as close to the target position as
-		/// possible. The target is specified in the world coordinate system.</summary>
+		/// <summary>Applies 2 bone IK. The target is specified in the world coordinate system.</summary>
 		/// <param name="child">A direct descendant of the parent bone.</param>
-		static public void Apply (Bone parent, Bone child, float targetX, float targetY, int bendDir, float alpha) {
-			if (alpha == 0) return;
-			float px = parent.x, py = parent.y, psx = parent.appliedScaleX, psy = parent.appliedScaleY;
+		static public void Apply (Bone parent, Bone child, float targetX, float targetY, int bendDir, bool stretch, float alpha) {
+			if (alpha == 0) {
+				child.UpdateWorldTransform();
+				return;
+			}
+			if (!parent.appliedValid) parent.UpdateAppliedTransform();
+			if (!child.appliedValid) child.UpdateAppliedTransform();
+			float px = parent.ax, py = parent.ay, psx = parent.ascaleX, sx = psx, psy = parent.ascaleY, csx = child.ascaleX;
 			int os1, os2, s2;
 			if (psx < 0) {
 				psx = -psx;
@@ -112,113 +194,109 @@ namespace Spine {
 				psy = -psy;
 				s2 = -s2;
 			}
-			float cx = child.x, cy = child.y, csx = child.appliedScaleX;
-			bool u = Math.Abs(psx - psy) <= 0.0001f;
-			if (!u && cy != 0) {
-				child.worldX = parent.a * cx + parent.worldX;
-				child.worldY = parent.c * cx + parent.worldY;
-				cy = 0;
-			}
 			if (csx < 0) {
 				csx = -csx;
 				os2 = 180;
 			} else
 				os2 = 0;
-			Bone pp = parent.parent;
-			float tx, ty, dx, dy;
-			if (pp == null) {
-				tx = targetX - px;
-				ty = targetY - py;
-				dx = child.worldX - px;
-				dy = child.worldY - py;
+			float cx = child.ax, cy, cwx, cwy, a = parent.a, b = parent.b, c = parent.c, d = parent.d;
+			bool u = Math.Abs(psx - psy) <= 0.0001f;
+			if (!u) {
+				cy = 0;
+				cwx = a * cx + parent.worldX;
+				cwy = c * cx + parent.worldY;
 			} else {
-				float a = pp.a, b = pp.b, c = pp.c, d = pp.d, invDet = 1 / (a * d - b * c);
-				float wx = pp.worldX, wy = pp.worldY, x = targetX - wx, y = targetY - wy;
-				tx = (x * d - y * b) * invDet - px;
-				ty = (y * a - x * c) * invDet - py;
-				x = child.worldX - wx;
-				y = child.worldY - wy;
-				dx = (x * d - y * b) * invDet - px;
-				dy = (y * a - x * c) * invDet - py;
+				cy = child.ay;
+				cwx = a * cx + b * cy + parent.worldX;
+				cwy = c * cx + d * cy + parent.worldY;
 			}
+			Bone pp = parent.parent;
+			a = pp.a;
+			b = pp.b;
+			c = pp.c;
+			d = pp.d;
+			float id = 1 / (a * d - b * c), x = targetX - pp.worldX, y = targetY - pp.worldY;
+			float tx = (x * d - y * b) * id - px, ty = (y * a - x * c) * id - py, dd = tx * tx + ty * ty;
+			x = cwx - pp.worldX;
+			y = cwy - pp.worldY;
+			float dx = (x * d - y * b) * id - px, dy = (y * a - x * c) * id - py;
 			float l1 = (float)Math.Sqrt(dx * dx + dy * dy), l2 = child.data.length * csx, a1, a2;
 			if (u) {
 				l2 *= psx;
-				float cos = (tx * tx + ty * ty - l1 * l1 - l2 * l2) / (2 * l1 * l2);
-				if (cos < -1) cos = -1;
-				else if (cos > 1) cos = 1;
+				float cos = (dd - l1 * l1 - l2 * l2) / (2 * l1 * l2);
+				if (cos < -1)
+					cos = -1;
+				else if (cos > 1) {
+					cos = 1;
+					if (stretch && l1 + l2 > 0.0001f) sx *= ((float)Math.Sqrt(dd) / (l1 + l2) - 1) * alpha + 1;
+				}
 				a2 = (float)Math.Acos(cos) * bendDir;
-				float a = l1 + l2 * cos, o = l2 * MathUtils.Sin(a2);
-				a1 = MathUtils.Atan2(ty * a - tx * o, tx * a + ty * o);
+				a = l1 + l2 * cos;
+				b = l2 * (float)Math.Sin(a2);
+				a1 = (float)Math.Atan2(ty * a - tx * b, tx * a + ty * b);
 			} else {
-				float a = psx * l2, b = psy * l2, ta = MathUtils.Atan2(ty, tx);
-				float aa = a * a, bb = b * b, ll = l1 * l1, dd = tx * tx + ty * ty;
-				float c0 = bb * ll + aa * dd - aa * bb, c1 = -2 * bb * l1, c2 = bb - aa;
-				float d = c1 * c1 - 4 * c2 * c0;
+				a = psx * l2;
+				b = psy * l2;
+				float aa = a * a, bb = b * b, ta = (float)Math.Atan2(ty, tx);
+				c = bb * l1 * l1 + aa * dd - aa * bb;
+				float c1 = -2 * bb * l1, c2 = bb - aa;
+				d = c1 * c1 - 4 * c2 * c;
 				if (d >= 0) {
 					float q = (float)Math.Sqrt(d);
 					if (c1 < 0) q = -q;
 					q = -(c1 + q) / 2;
-					float r0 = q / c2, r1 = c0 / q;
+					float r0 = q / c2, r1 = c / q;
 					float r = Math.Abs(r0) < Math.Abs(r1) ? r0 : r1;
 					if (r * r <= dd) {
-						float y1 = (float)Math.Sqrt(dd - r * r) * bendDir;
-						a1 = ta - MathUtils.Atan2(y1, r);
-						a2 = MathUtils.Atan2(y1 / psy, (r - l1) / psx);
-						goto outer;
+						y = (float)Math.Sqrt(dd - r * r) * bendDir;
+						a1 = ta - (float)Math.Atan2(y, r);
+						a2 = (float)Math.Atan2(y / psy, (r - l1) / psx);
+						goto break_outer; // break outer;
 					}
 				}
-				float minAngle = 0, minDist = float.MaxValue, minX = 0, minY = 0;
-				float maxAngle = 0, maxDist = 0, maxX = 0, maxY = 0;
-				float x = l1 + a, dist = x * x;
-				if (dist > maxDist) {
-					maxAngle = 0;
-					maxDist = dist;
-					maxX = x;
-				}
-				x = l1 - a;
-				dist = x * x;
-				if (dist < minDist) {
-					minAngle = MathUtils.PI;
-					minDist = dist;
-					minX = x;
-				}
-				float angle = (float)Math.Acos(-a * l1 / (aa - bb));
-				x = a * MathUtils.Cos(angle) + l1;
-				float y = b * MathUtils.Sin(angle);
-				dist = x * x + y * y;
-				if (dist < minDist) {
-					minAngle = angle;
-					minDist = dist;
-					minX = x;
-					minY = y;
-				}
-				if (dist > maxDist) {
-					maxAngle = angle;
-					maxDist = dist;
-					maxX = x;
-					maxY = y;
+				float minAngle = MathUtils.PI, minX = l1 - a, minDist = minX * minX, minY = 0;
+				float maxAngle = 0, maxX = l1 + a, maxDist = maxX * maxX, maxY = 0;
+				c = -a * l1 / (aa - bb);
+				if (c >= -1 && c <= 1) {
+					c = (float)Math.Acos(c);
+					x = a * (float)Math.Cos(c) + l1;
+					y = b * (float)Math.Sin(c);
+					d = x * x + y * y;
+					if (d < minDist) {
+						minAngle = c;
+						minDist = d;
+						minX = x;
+						minY = y;
+					}
+					if (d > maxDist) {
+						maxAngle = c;
+						maxDist = d;
+						maxX = x;
+						maxY = y;
+					}
 				}
 				if (dd <= (minDist + maxDist) / 2) {
-					a1 = ta - MathUtils.Atan2(minY * bendDir, minX);
+					a1 = ta - (float)Math.Atan2(minY * bendDir, minX);
 					a2 = minAngle * bendDir;
 				} else {
-					a1 = ta - MathUtils.Atan2(maxY * bendDir, maxX);
+					a1 = ta - (float)Math.Atan2(maxY * bendDir, maxX);
 					a2 = maxAngle * bendDir;
 				}
 			}
-		outer:
-			float os = MathUtils.Atan2(cy, cx) * s2;
-			a1 = (a1 - os) * MathUtils.radDeg + os1;
-			a2 = (a2 + os) * MathUtils.radDeg * s2 + os2;
-			if (a1 > 180) a1 -= 360;
+			break_outer:
+			float os = (float)Math.Atan2(cy, cx) * s2;
+			float rotation = parent.arotation;
+			a1 = (a1 - os) * MathUtils.RadDeg + os1 - rotation;
+			if (a1 > 180)
+				a1 -= 360;
 			else if (a1 < -180) a1 += 360;
-			if (a2 > 180) a2 -= 360;
+			parent.UpdateWorldTransform(px, py, rotation + a1 * alpha, sx, parent.ascaleY, 0, 0);
+			rotation = child.arotation;
+			a2 = ((a2 + os) * MathUtils.RadDeg - child.ashearX) * s2 + os2 - rotation;
+			if (a2 > 180)
+				a2 -= 360;
 			else if (a2 < -180) a2 += 360;
-			float rotation = parent.rotation;
-			parent.UpdateWorldTransform(px, py, rotation + (a1 - rotation) * alpha, parent.appliedScaleX, parent.appliedScaleY);
-			rotation = child.rotation;
-			child.UpdateWorldTransform(cx, cy, rotation + (a2 - rotation) * alpha, child.appliedScaleX, child.appliedScaleY);
+			child.UpdateWorldTransform(cx, cy, rotation + a2 * alpha, child.ascaleX, child.ascaleY, child.ashearX, child.ashearY);
 		}
 	}
 }

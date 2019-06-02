@@ -1,36 +1,39 @@
 /******************************************************************************
- * Spine Runtimes Software License
- * Version 2.3
- * 
- * Copyright (c) 2013-2015, Esoteric Software
- * All rights reserved.
- * 
- * You are granted a perpetual, non-exclusive, non-sublicensable and
- * non-transferable license to use, install, execute and perform the Spine
- * Runtimes Software (the "Software") and derivative works solely for personal
- * or internal use. Without the written permission of Esoteric Software (see
- * Section 2 of the Spine Software License Agreement), you may not (a) modify,
- * translate, adapt or otherwise create derivative works, improvements of the
- * Software or develop new applications using the Software or (b) remove,
- * delete, alter or obscure any trademarks or any copyright, trademark, patent
- * or other intellectual property or proprietary rights notices on or in the
- * Software, including any copy thereof. Redistributions in binary or source
- * form must include this license and terms.
- * 
- * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL ESOTERIC SOFTWARE BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Spine Runtimes License Agreement
+ * Last updated May 1, 2019. Replaces all prior versions.
+ *
+ * Copyright (c) 2013-2019, Esoteric Software LLC
+ *
+ * Integration of the Spine Runtimes into software or otherwise creating
+ * derivative works of the Spine Runtimes is permitted under the terms and
+ * conditions of Section 2 of the Spine Editor License Agreement:
+ * http://esotericsoftware.com/spine-editor-license
+ *
+ * Otherwise, it is permitted to integrate the Spine Runtimes into software
+ * or otherwise create derivative works of the Spine Runtimes (collectively,
+ * "Products"), provided that each user of the Products must obtain their own
+ * Spine Editor license and redistribution of the Products in any form must
+ * include this license and copyright notice.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ESOTERIC SOFTWARE LLC "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+ * NO EVENT SHALL ESOTERIC SOFTWARE LLC BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, BUSINESS
+ * INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
+
+#if (UNITY_5 || UNITY_5_3_OR_NEWER || UNITY_WSA || UNITY_WP8 || UNITY_WP8_1)
+#define IS_UNITY
+#endif
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 
@@ -40,12 +43,22 @@ using Windows.Storage;
 #endif
 
 namespace Spine {
-	public class Atlas {
-		List<AtlasPage> pages = new List<AtlasPage>();
+	public class Atlas : IEnumerable<AtlasRegion> {
+		readonly List<AtlasPage> pages = new List<AtlasPage>();
 		List<AtlasRegion> regions = new List<AtlasRegion>();
 		TextureLoader textureLoader;
 
-		#if !(UNITY_5 || UNITY_4 || UNITY_WSA || UNITY_WP8 || UNITY_WP8_1) // !UNITY
+		#region IEnumerable implementation
+		public IEnumerator<AtlasRegion> GetEnumerator () {
+			return regions.GetEnumerator();
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator () {
+			return regions.GetEnumerator();
+		}
+		#endregion
+
+		#if !(IS_UNITY)
 		#if WINDOWS_STOREAPP
 		private async Task ReadFile(string path, TextureLoader textureLoader) {
 			var folder = Windows.ApplicationModel.Package.Current.InstalledLocation;
@@ -59,12 +72,12 @@ namespace Spine {
 			}
 		}
 
-		public Atlas(String path, TextureLoader textureLoader) {
+		public Atlas(string path, TextureLoader textureLoader) {
 			this.ReadFile(path, textureLoader).Wait();
 		}
 		#else
 
-		public Atlas (String path, TextureLoader textureLoader) {
+		public Atlas (string path, TextureLoader textureLoader) {
 
 			#if WINDOWS_PHONE
 			Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(path);
@@ -83,9 +96,9 @@ namespace Spine {
 		}
 		#endif // WINDOWS_STOREAPP
 
-		#endif // !(UNITY)
+		#endif
 
-		public Atlas (TextReader reader, String dir, TextureLoader textureLoader) {
+		public Atlas (TextReader reader, string dir, TextureLoader textureLoader) {
 			Load(reader, dir, textureLoader);
 		}
 
@@ -95,14 +108,14 @@ namespace Spine {
 			this.textureLoader = null;
 		}
 
-		private void Load (TextReader reader, String imagesDir, TextureLoader textureLoader) {
-			if (textureLoader == null) throw new ArgumentNullException("textureLoader cannot be null.");
+		private void Load (TextReader reader, string imagesDir, TextureLoader textureLoader) {
+			if (textureLoader == null) throw new ArgumentNullException("textureLoader", "textureLoader cannot be null.");
 			this.textureLoader = textureLoader;
 
-			String[] tuple = new String[4];
+			string[] tuple = new string[4];
 			AtlasPage page = null;
 			while (true) {
-				String line = reader.ReadLine();
+				string line = reader.ReadLine();
 				if (line == null) break;
 				if (line.Trim().Length == 0)
 					page = null;
@@ -111,8 +124,8 @@ namespace Spine {
 					page.name = line;
 
 					if (ReadTuple(reader, tuple) == 2) { // size is only optional for an atlas packed with an old TexturePacker.
-						page.width = int.Parse(tuple[0]);
-						page.height = int.Parse(tuple[1]);
+						page.width = int.Parse(tuple[0], CultureInfo.InvariantCulture);
+						page.height = int.Parse(tuple[1], CultureInfo.InvariantCulture);
 						ReadTuple(reader, tuple);
 					}
 					page.format = (Format)Enum.Parse(typeof(Format), tuple[0], false);
@@ -121,7 +134,7 @@ namespace Spine {
 					page.minFilter = (TextureFilter)Enum.Parse(typeof(TextureFilter), tuple[0], false);
 					page.magFilter = (TextureFilter)Enum.Parse(typeof(TextureFilter), tuple[1], false);
 
-					String direction = ReadValue(reader);
+					string direction = ReadValue(reader);
 					page.uWrap = TextureWrap.ClampToEdge;
 					page.vWrap = TextureWrap.ClampToEdge;
 					if (direction == "x")
@@ -143,12 +156,12 @@ namespace Spine {
 					region.rotate = Boolean.Parse(ReadValue(reader));
 
 					ReadTuple(reader, tuple);
-					int x = int.Parse(tuple[0]);
-					int y = int.Parse(tuple[1]);
+					int x = int.Parse(tuple[0], CultureInfo.InvariantCulture);
+					int y = int.Parse(tuple[1], CultureInfo.InvariantCulture);
 
 					ReadTuple(reader, tuple);
-					int width = int.Parse(tuple[0]);
-					int height = int.Parse(tuple[1]);
+					int width = int.Parse(tuple[0], CultureInfo.InvariantCulture);
+					int height = int.Parse(tuple[1], CultureInfo.InvariantCulture);
 
 					region.u = x / (float)page.width;
 					region.v = y / (float)page.height;
@@ -165,41 +178,45 @@ namespace Spine {
 					region.height = Math.Abs(height);
 
 					if (ReadTuple(reader, tuple) == 4) { // split is optional
-						region.splits = new int[] {int.Parse(tuple[0]), int.Parse(tuple[1]),
-								int.Parse(tuple[2]), int.Parse(tuple[3])};
+						region.splits = new [] {int.Parse(tuple[0], CultureInfo.InvariantCulture),
+												int.Parse(tuple[1], CultureInfo.InvariantCulture),
+												int.Parse(tuple[2], CultureInfo.InvariantCulture),
+												int.Parse(tuple[3], CultureInfo.InvariantCulture)};
 
 						if (ReadTuple(reader, tuple) == 4) { // pad is optional, but only present with splits
-							region.pads = new int[] {int.Parse(tuple[0]), int.Parse(tuple[1]),
-									int.Parse(tuple[2]), int.Parse(tuple[3])};
+							region.pads = new [] {int.Parse(tuple[0], CultureInfo.InvariantCulture),
+												int.Parse(tuple[1], CultureInfo.InvariantCulture),
+												int.Parse(tuple[2], CultureInfo.InvariantCulture),
+												int.Parse(tuple[3], CultureInfo.InvariantCulture)};
 
 							ReadTuple(reader, tuple);
 						}
 					}
 
-					region.originalWidth = int.Parse(tuple[0]);
-					region.originalHeight = int.Parse(tuple[1]);
+					region.originalWidth = int.Parse(tuple[0], CultureInfo.InvariantCulture);
+					region.originalHeight = int.Parse(tuple[1], CultureInfo.InvariantCulture);
 
 					ReadTuple(reader, tuple);
-					region.offsetX = int.Parse(tuple[0]);
-					region.offsetY = int.Parse(tuple[1]);
+					region.offsetX = int.Parse(tuple[0], CultureInfo.InvariantCulture);
+					region.offsetY = int.Parse(tuple[1], CultureInfo.InvariantCulture);
 
-					region.index = int.Parse(ReadValue(reader));
+					region.index = int.Parse(ReadValue(reader), CultureInfo.InvariantCulture);
 
 					regions.Add(region);
 				}
 			}
 		}
 
-		static String ReadValue (TextReader reader) {
-			String line = reader.ReadLine();
+		static string ReadValue (TextReader reader) {
+			string line = reader.ReadLine();
 			int colon = line.IndexOf(':');
 			if (colon == -1) throw new Exception("Invalid line: " + line);
 			return line.Substring(colon + 1).Trim();
 		}
 
 		/// <summary>Returns the number of tuple values read (1, 2 or 4).</summary>
-		static int ReadTuple (TextReader reader, String[] tuple) {
-			String line = reader.ReadLine();
+		static int ReadTuple (TextReader reader, string[] tuple) {
+			string line = reader.ReadLine();
 			int colon = line.IndexOf(':');
 			if (colon == -1) throw new Exception("Invalid line: " + line);
 			int i = 0, lastMatch = colon + 1;
@@ -224,7 +241,7 @@ namespace Spine {
 		/// <summary>Returns the first region found with the specified name. This method uses string comparison to find the region, so the result
 		/// should be cached rather than calling this method multiple times.</summary>
 		/// <returns>The region, or null.</returns>
-		public AtlasRegion FindRegion (String name) {
+		public AtlasRegion FindRegion (string name) {
 			for (int i = 0, n = regions.Count; i < n; i++)
 				if (regions[i].name == name) return regions[i];
 			return null;
@@ -264,19 +281,23 @@ namespace Spine {
 	}
 
 	public class AtlasPage {
-		public String name;
+		public string name;
 		public Format format;
 		public TextureFilter minFilter;
 		public TextureFilter magFilter;
 		public TextureWrap uWrap;
 		public TextureWrap vWrap;
-		public Object rendererObject;
+		public object rendererObject;
 		public int width, height;
+
+		public AtlasPage Clone () {
+			return MemberwiseClone() as AtlasPage;
+		}
 	}
 
 	public class AtlasRegion {
 		public AtlasPage page;
-		public String name;
+		public string name;
 		public int x, y, width, height;
 		public float u, v, u2, v2;
 		public float offsetX, offsetY;
@@ -285,10 +306,14 @@ namespace Spine {
 		public bool rotate;
 		public int[] splits;
 		public int[] pads;
+
+		public AtlasRegion Clone () {
+			return MemberwiseClone() as AtlasRegion;
+		}
 	}
 
 	public interface TextureLoader {
-		void Load (AtlasPage page, String path);
+		void Load (AtlasPage page, string path);
 		void Unload (Object texture);
 	}
 }
