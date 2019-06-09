@@ -48,8 +48,9 @@
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1074, 749);
+            this.panel1.Size = new System.Drawing.Size(586, 406);
             this.panel1.TabIndex = 0;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             this.panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
@@ -62,7 +63,7 @@
             this.toolStripDropDownButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1074, 35);
+            this.toolStrip1.Size = new System.Drawing.Size(586, 35);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -72,18 +73,19 @@
             this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(49, 32);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(41, 32);
             this.toolStripDropDownButton1.Text = "toolStripDropDownButton1";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1074, 749);
+            this.ClientSize = new System.Drawing.Size(586, 406);
             this.Controls.Add(this.panel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "Form1";
-            this.Text = "Spine Runtime - ";
+            this.Text = "Spine Runtime Windows Forms";
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
             this.panel1.ResumeLayout(false);

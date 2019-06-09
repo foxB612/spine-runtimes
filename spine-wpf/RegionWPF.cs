@@ -28,13 +28,14 @@
  *****************************************************************************/
 
 
-using Spine;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Spine
 {
-    class Gdi
+    class Wpf
     {
         /*
          * Spine exports texture atlases using the libgdx atlas format.
@@ -44,11 +45,9 @@ namespace Spine
          * Page entries are separated by a blank line. Here is an example atlas with 2 pages:
          */
 
-        static public Dictionary<AtlasRegion, Bitmap> Caches = new Dictionary<AtlasRegion, Bitmap>();
-        static public Bitmap ExtractRegion(AtlasRegion region, Image bitmap)
+        static public Dictionary<AtlasRegion, BitmapSource> Caches = new Dictionary<AtlasRegion, BitmapSource>();
+        static public BitmapSource ExtractRegion(AtlasRegion region, BitmapSource bitmap)
         {
-
-            Bitmap target = null;
 
             // Re-use cache
             if (Caches.ContainsKey(region))
@@ -56,47 +55,42 @@ namespace Spine
                 return Caches[region];
             }
 
-            RectangleF dstRect;
-            RectangleF srcRect;
+            Rect dstRect;
+            Int32Rect srcRect;
 
             // Subregion
             if (region.rotate)
             {
-                dstRect = new RectangleF(region.originalHeight - (region.height + region.offsetY), region.originalWidth - (region.width + region.offsetX), region.height, region.width);
-                srcRect = new RectangleF(region.x, region.y, region.height, region.width);
+                dstRect = new Rect(region.originalHeight - (region.height + region.offsetY), region.originalWidth - (region.width + region.offsetX), region.height, region.width);
+                srcRect = new Int32Rect(region.x, region.y, region.height, region.width);
             }
             else
             {
-                dstRect = new RectangleF(region.offsetX, region.originalHeight - (region.height + region.offsetY), region.width, region.height);
-                srcRect = new RectangleF(region.x, region.y, region.width, region.height);
+                dstRect = new Rect(region.offsetX, region.originalHeight - (region.height + region.offsetY), region.width, region.height);
+                srcRect = new Int32Rect(region.x, region.y, region.width, region.height);
             }
 
+            // Apply crop and copy
+            BitmapSource target;
 
             if (region.rotate)
-            {
-                // swap width, height, X, Y
-                target = new Bitmap(region.originalHeight, region.originalWidth);
-              
-                using (var g2 = Graphics.FromImage(target))
-                {
-                    /* Pixels stripped from the bottom left, unrotated. */
-                  
-                    g2.DrawImage(bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
-                    target.RotateFlip(RotateFlipType.Rotate90FlipNone);
-                }
+            {                
+                var cropped_and_rotated = new TransformedBitmap();
+                cropped_and_rotated.BeginInit();
+                cropped_and_rotated.Source = new CroppedBitmap(bitmap, srcRect);
+                cropped_and_rotated.Transform = new RotateTransform(90, srcRect.Width/2.0f, srcRect.Height/2.0f);
+                cropped_and_rotated.EndInit();
+                target = cropped_and_rotated;
 
             }
-            else
+            else 
             {
-                target = new Bitmap(region.originalWidth, region.originalHeight);
-
-                using (Graphics g2 = Graphics.FromImage(target))
-                {
-                    /* Pixels stripped from the bottom left, unrotated. */
-                    g2.DrawImage(bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
-
-
-                }
+                var cropped_and_rotated = new TransformedBitmap();
+                cropped_and_rotated.BeginInit();
+                cropped_and_rotated.Source = new CroppedBitmap(bitmap, srcRect);
+                cropped_and_rotated.Transform = new ScaleTransform(1, -1, 0 ,0);
+                cropped_and_rotated.EndInit();
+                target = cropped_and_rotated;
             }
 
             Caches.Add(region, target);

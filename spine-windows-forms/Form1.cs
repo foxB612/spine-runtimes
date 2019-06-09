@@ -104,7 +104,7 @@ namespace SpineWindowsForms
 
             Center = new Point(Width / 2, Height / 2);
 
-            this.Text = "Spine Runtime - " + mSkeletonData.Version;
+            this.Text = "Spine Runtime Windows Forms - " + mSkeletonData.Version;
 
 
 
@@ -163,10 +163,10 @@ namespace SpineWindowsForms
             }
         }
 
-        PointF HoldPosition = new PointF();
+        
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            HoldPosition = e.Location;
+            
         }
 
         private void Tick(object sender, EventArgs e)
