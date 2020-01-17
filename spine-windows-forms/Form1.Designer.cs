@@ -49,7 +49,7 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "skel动画文件|*.skel";
+            this.openFileDialog1.Filter = "skel动画文件|*.skel;*.skel.txt";
             // 
             // panel1
             // 
@@ -60,9 +60,9 @@
             this.panel1.Controls.Add(this.toolStrip1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Margin = new System.Windows.Forms.Padding(2);
+            this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(586, 390);
+            this.panel1.Size = new System.Drawing.Size(781, 488);
             this.panel1.TabIndex = 0;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             this.panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
@@ -75,9 +75,10 @@
             this.button2.FlatAppearance.MouseDownBackColor = System.Drawing.Color.LightCyan;
             this.button2.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Azure;
             this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button2.Location = new System.Drawing.Point(79, 6);
+            this.button2.Location = new System.Drawing.Point(105, 8);
+            this.button2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(76, 22);
+            this.button2.Size = new System.Drawing.Size(101, 28);
             this.button2.TabIndex = 3;
             this.button2.Text = "选择文件";
             this.button2.UseVisualStyleBackColor = false;
@@ -90,9 +91,10 @@
             this.checkBox1.BackColor = System.Drawing.SystemColors.Window;
             this.checkBox1.Checked = true;
             this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox1.Location = new System.Drawing.Point(410, 9);
+            this.checkBox1.Location = new System.Drawing.Point(552, 11);
+            this.checkBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(48, 16);
+            this.checkBox1.Size = new System.Drawing.Size(59, 19);
             this.checkBox1.TabIndex = 2;
             this.checkBox1.Text = "播放";
             this.checkBox1.UseVisualStyleBackColor = false;
@@ -105,9 +107,10 @@
             this.button1.FlatAppearance.MouseDownBackColor = System.Drawing.Color.LightCyan;
             this.button1.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Azure;
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.Location = new System.Drawing.Point(499, 5);
+            this.button1.Location = new System.Drawing.Point(665, 6);
+            this.button1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(100, 29);
             this.button1.TabIndex = 1;
             this.button1.Text = "导出";
             this.button1.UseVisualStyleBackColor = false;
@@ -120,7 +123,7 @@
             this.toolStripDropDownButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(586, 35);
+            this.toolStrip1.Size = new System.Drawing.Size(781, 35);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -130,17 +133,17 @@
             this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
-            this.toolStripDropDownButton1.Size = new System.Drawing.Size(41, 32);
+            this.toolStripDropDownButton1.Size = new System.Drawing.Size(42, 32);
             this.toolStripDropDownButton1.Text = "toolStripDropDownButton1";
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(586, 390);
+            this.ClientSize = new System.Drawing.Size(781, 488);
             this.Controls.Add(this.panel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.Text = "Spine Runtime Windows Forms";
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);

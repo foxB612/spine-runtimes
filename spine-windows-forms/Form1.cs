@@ -65,7 +65,7 @@ namespace SpineWindowsForms
 
             //SkeletonData mSkeletonData;
 
-            if (spineFullPath.ToLower().EndsWith(".skel"))
+            if (spineFullPath.ToLower().EndsWith(".skel") || spineFullPath.ToLower().EndsWith(".skel.txt"))
             {
                 var skel = new SkeletonBinary(mLoader);
                 mSkeletonData = skel.ReadSkeletonData(spineFullPath);
@@ -216,10 +216,34 @@ namespace SpineWindowsForms
 
         private void button2_Click(object sender, EventArgs e)
         {
-            openFileDialog1.ShowDialog(this);
-            skelPath = openFileDialog1.FileName;
-            string atlasPath = skelPath.Replace(".skel", ".atlas");
-            LoadSkeleton(skelPath, atlasPath);
+            if (openFileDialog1.ShowDialog(this) == DialogResult.OK)
+            {
+                skelPath = openFileDialog1.FileName;
+                string atlasPath;
+                if (skelPath.EndsWith(".txt"))
+                    atlasPath = skelPath.Replace(".skel.txt", ".atlas");
+                else
+                    atlasPath = skelPath.Replace(".skel", ".atlas");
+                if (!File.Exists(atlasPath))
+                    atlasPath = atlasPath + ".txt";
+                if (!File.Exists(atlasPath))
+                {
+                    MessageBox.Show(atlasPath + " doesn't exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                try
+                {
+                    LoadSkeleton(skelPath, atlasPath);
+                }
+                catch (Exception exception)
+                {
+                    if (exception.Message.Contains("Error reading atlas file:"))
+                        MessageBox.Show("No texture found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    else
+                        MessageBox.Show("Unknown error:\n" + exception.Message + "\n" + exception.StackTrace,
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
     }
 }
