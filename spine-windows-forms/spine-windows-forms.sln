@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spine-windows-forms", "spin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spine-csharp", "..\spine-csharp\spine-csharp.csproj", "{94144E22-2431-4A8F-AC04-DEC22F7EDD8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spine-wpf", "..\spine-wpf\spine-wpf.csproj", "{237D3CEE-B75E-433C-8A1A-76CDB914A2A3}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{94144E22-2431-4A8F-AC04-DEC22F7EDD8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94144E22-2431-4A8F-AC04-DEC22F7EDD8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94144E22-2431-4A8F-AC04-DEC22F7EDD8F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{237D3CEE-B75E-433C-8A1A-76CDB914A2A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{237D3CEE-B75E-433C-8A1A-76CDB914A2A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{237D3CEE-B75E-433C-8A1A-76CDB914A2A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{237D3CEE-B75E-433C-8A1A-76CDB914A2A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

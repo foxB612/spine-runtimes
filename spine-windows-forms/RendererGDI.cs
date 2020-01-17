@@ -27,16 +27,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  * *******************************************************************************/
-using Spine;
 using System;
 using System.Drawing;
-using System.Windows.Forms;
+using System.Drawing.Imaging;
 
 namespace Spine
 {
     /*!
      *   Basic texture loader, loading GDI Bitmap
-     */ 
+     */
     class ResourceTextureLoader : TextureLoader
     {
         public void Load(AtlasPage page, string path)
@@ -47,6 +46,7 @@ namespace Spine
         }
         public void Unload(Object texture)
         {
+            texture = null;
         }
     }
    /*!
@@ -86,16 +86,6 @@ namespace Spine
             var attachment = new PathAttachment(name);
             return attachment;
         }
-        public PointAttachment NewPointAttachment(Skin skin, string name)
-        {
-            var attachment = new PointAttachment(name);
-            return attachment;
-        }
-        public ClippingAttachment NewClippingAttachment(Skin skin, string name)
-        {
-            var attachment = new ClippingAttachment(name);
-            return attachment;
-        }
     }
     /*
      * Undefeated Windows Forms renderer
@@ -107,7 +97,6 @@ namespace Spine
           */ 
         public static void DrawAttachmnentPolygon(Pipeline pipeline, AtlasRegion region, float[] worldVertices, Color color, BlendMode blend)
         {
-
             var destPoints = new PointF[worldVertices.Length / 2];
             for (int i = 0; i < worldVertices.Length / 2; i++)
             {
@@ -119,31 +108,29 @@ namespace Spine
             primitive.color = color;
             primitive.blend = (int)blend;
             pipeline.Marshall(primitive);
-
-
         }
         /*
          * Draw attachment
          */
-        public static void DrawAttachmnent(Pipeline pipeline, AtlasRegion region, float[] worldVertices, Color color, BlendMode blend)
+        public static void DrawRegionAttachmnent(Pipeline pipeline, AtlasRegion region, float[] worldVertices, Color color, BlendMode blend)
         {
             var bitmap = (Image)region.page.rendererObject;
-            var destPoints = new PointF[3];
-
-            // The three Point structures represent the upper-left, upper-right, and lower-left corners of the parallelogram. 
-            // The fourth point is extrapolated from the first three to form a parallelogram.
-              
-            destPoints[0].X = worldVertices[RegionAttachment.ULX+2];
-            destPoints[0].Y = worldVertices[RegionAttachment.ULY+2];
-
-            destPoints[1].X = worldVertices[RegionAttachment.URX+2];
-            destPoints[1].Y = worldVertices[RegionAttachment.URY+2];
-
-            destPoints[2].X = worldVertices[RegionAttachment.BLX+2];
-            destPoints[2].Y = worldVertices[RegionAttachment.BLY+2];
-
             // Extract region
             var target = Gdi.ExtractRegion(region, bitmap);
+
+            var destPoints = new PointF[3];
+            // The three Point structures represent the upper-left, upper-right, and lower-left corners of the parallelogram. 
+            // The fourth point is extrapolated from the first three to form a parallelogram.
+            destPoints[0].X = worldVertices[RegionAttachment.X2];
+            destPoints[0].Y = worldVertices[RegionAttachment.Y2];
+
+            destPoints[1].X = worldVertices[RegionAttachment.X3];
+            destPoints[1].Y = worldVertices[RegionAttachment.Y3];
+
+            destPoints[2].X = worldVertices[RegionAttachment.X1];
+            destPoints[2].Y = worldVertices[RegionAttachment.Y1];
+
+
 
             // Create new primitive
             var primitive = pipeline.NewPrimitive(destPoints);
@@ -154,24 +141,104 @@ namespace Spine
             pipeline.Marshall(primitive);
         }
 
+        public static void DrawMeshAttachmnent(Pipeline pipeline, AtlasRegion region, float[] regionUVs, float[] worldVertices, int[] triangles, Color color, BlendMode blend)
+        {
+            float worldMinX = float.MaxValue;
+            float worldMaxX = float.MinValue;
+            float worldMinY = float.MaxValue;
+            float worldMaxY = float.MinValue;
+            for (int i = 0; i < worldVertices.Length; i += 2)
+            {
+                if (worldMinX > worldVertices[i])
+                    worldMinX = worldVertices[i];
+                if (worldMaxX < worldVertices[i])
+                    worldMaxX = worldVertices[i];
+            }
+            for (int i = 0; i < worldVertices.Length; i += 2)
+            {
+                if (worldMinY > worldVertices[i + 1])
+                    worldMinY = worldVertices[i + 1];
+                if (worldMaxY < worldVertices[i + 1])
+                    worldMaxY = worldVertices[i + 1];
+            }
+            int minX = (int)Math.Round(worldMinX);
+            int maxX = (int)Math.Round(worldMaxX);
+            int minY = (int)Math.Round(worldMinY);
+            int maxY = (int)Math.Round(worldMaxY);
+
+            Image bitmap = (Image)region.page.rendererObject;
+            //// Extract region
+            Bitmap img = Gdi.ExtractRegion(region, bitmap);
+            Bitmap result = new Bitmap(maxX - minX + 3, maxY - minY + 3, PixelFormat.Format32bppArgb);
+            BitmapData imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            BitmapData resultData = result.LockBits(new Rectangle(0, 0, result.Width, result.Height),
+                ImageLockMode.ReadWrite, result.PixelFormat);
+
+
+            //Graphics e = Graphics.FromImage(result);
+            //e.Clear(Color.Transparent);
+
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                Point[] srcP = new Point[3];
+                Point[] destP = new Point[3];
+                for (int j = 0; j < 3; j++)
+                {
+                    srcP[j] = new Point((int)Math.Round(regionUVs[triangles[i + j] * 2] * img.Width),
+                        (int)Math.Round(regionUVs[triangles[i + j] * 2 + 1] * img.Height));
+                    destP[j] = new Point((int)Math.Round(worldVertices[triangles[i + j] * 2]) - minX,
+                        (int)Math.Round(worldVertices[triangles[i + j] * 2 + 1]) - minY);
+                }
+
+                //e.DrawPolygon(new Pen(Brushes.Black), destP);
+                Gdi.TriangleTransform(imgData, resultData, srcP, destP);
+            }
+            result.UnlockBits(resultData);
+            img.UnlockBits(imgData);
+            var primitive = pipeline.NewPrimitive(new PointF[] {new PointF(minX, minY),
+                                    new PointF(maxX, minY), new PointF(minX, maxY) });
+            primitive.color = color;
+            primitive.image = result;
+            primitive.blend = (int)blend;
+            primitive.texcoords = new RectangleF(0, 0, result.Width, result.Height);
+            pipeline.Marshall(primitive);
+
+        }
+
         /*
          *  Actual draw. Pipeline is 'deferred' list of GDI calls
-         */ 
+         */
         public static void Draw(Skeleton skeleton, Pipeline pipeline)
         {
             skeleton.UpdateWorldTransform();
 
             foreach (Slot slot in skeleton.Slots)
             {
-                // Only draw region attachment are supported here
-                if (slot.Attachment == null || slot.Attachment.GetType() != typeof(RegionAttachment))
+                if (slot.Attachment == null)
                     continue;
-                RegionAttachment attach = (RegionAttachment)slot.Attachment;
-                AtlasRegion region = (AtlasRegion)attach.RendererObject;
-                float[] worldVertices = new float[2 * 4];
-                attach.ComputeWorldVertices(slot.Bone, worldVertices, 0);
-                var color = Color.FromArgb((int)(slot.A * 255), (int)(slot.R * 255), (int)(slot.G * 255), (int)(slot.B * 255));
-                DrawAttachmnent(pipeline, region, worldVertices, color, slot.Data.BlendMode);
+                if (slot.Attachment.GetType() == typeof(RegionAttachment))
+                {
+                    RegionAttachment attach = (RegionAttachment)slot.Attachment;
+                    AtlasRegion region = (AtlasRegion)attach.RendererObject;
+                    float[] worldVertices = new float[2 * 4];
+                    attach.ComputeWorldVertices(slot.Bone, worldVertices);
+                    var color = Color.FromArgb((int)(slot.A * 255), (int)(slot.R * 255), (int)(slot.G * 255), (int)(slot.B * 255));
+                    DrawRegionAttachmnent(pipeline, region, worldVertices, color, slot.Data.BlendMode);
+                }
+                else if (slot.Attachment.GetType() == typeof(MeshAttachment))
+                {
+                    MeshAttachment attach = (MeshAttachment)slot.Attachment;
+                    AtlasRegion region = (AtlasRegion)attach.RendererObject;
+                    float[] worldVertices = new float[attach.WorldVerticesLength];
+                    attach.ComputeWorldVertices(slot, worldVertices);
+                    int[] triangles = attach.Triangles;
+                    var color = Color.FromArgb((int)(slot.A * 255), (int)(slot.R * 255), (int)(slot.G * 255), (int)(slot.B * 255));
+                    DrawMeshAttachmnent(pipeline, region, attach.RegionUVs, worldVertices, triangles, color, slot.Data.BlendMode);
+                }
+                else
+                {
+
+                }
             }
 
         }
