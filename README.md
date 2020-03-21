@@ -14,3 +14,5 @@ This project allows to render Spine skeleton with WinForm.
 - Support [Mesh Attachment](http://esotericsoftware.com/spine-meshes) now.
 - Rollback spine-csharp runtime to version 3.5.51 for compatibility with Arknights.
 - Export animations to frame-by-frame pictures.
+
+**NO BUILT VERSION WILL BE RELEASED DUE TO SPINE LICENSE**
