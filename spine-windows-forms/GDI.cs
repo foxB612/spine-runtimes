@@ -78,7 +78,7 @@ namespace Spine
             if (region.rotate)
             {
                 // swap width, height, X, Y
-                target = new Bitmap(region.originalHeight, region.originalWidth);
+                target = new Bitmap(region.originalHeight, region.originalWidth, PixelFormat.Format32bppPArgb);
               
                 using (var g2 = Graphics.FromImage(target))
                 {
@@ -90,7 +90,7 @@ namespace Spine
             }
             else
             {
-                target = new Bitmap(region.originalWidth, region.originalHeight);
+                target = new Bitmap(region.originalWidth, region.originalHeight, PixelFormat.Format32bppPArgb);
 
                 using (Graphics g2 = Graphics.FromImage(target))
                 {
@@ -280,7 +280,7 @@ namespace Spine
             }
             if (y2 == y1)
             {
-                if (y1 + 1 >= srcImg.Width)
+                if (y1 + 1 >= srcImg.Height)
                     y1--;
                 else
                     y2++;

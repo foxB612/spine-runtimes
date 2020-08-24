@@ -40,9 +40,22 @@ namespace Spine
     {
         public void Load(AtlasPage page, string path)
         {
-            var b = new Bitmap(path);
-            b.SetResolution(96, 96);            
-            page.rendererObject = b;
+            Bitmap b = new Bitmap(path);
+            BitmapData bd = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), 
+                            ImageLockMode.ReadOnly, b.PixelFormat);
+            // convert format from ARGB to PARGB without modifying the actual data
+            Bitmap pb = new Bitmap(b.Width, b.Height, PixelFormat.Format32bppPArgb);
+            BitmapData pbd = pb.LockBits(new Rectangle(0, 0, pb.Width, pb.Height),
+                            ImageLockMode.ReadWrite, pb.PixelFormat);
+            IntPtr ptr = bd.Scan0;
+            int bytes = Math.Abs(bd.Stride) * b.Height;
+            byte[] argbValues = new byte[bytes];
+            System.Runtime.InteropServices.Marshal.Copy(ptr, argbValues, 0, bytes);
+            System.Runtime.InteropServices.Marshal.Copy(argbValues, 0, pbd.Scan0, bytes);
+            pb.UnlockBits(pbd);
+
+            pb.SetResolution(96, 96);
+            page.rendererObject = pb;
         }
         public void Unload(Object texture)
         {
@@ -169,8 +182,9 @@ namespace Spine
             Image bitmap = (Image)region.page.rendererObject;
             //// Extract region
             Bitmap img = Gdi.ExtractRegion(region, bitmap);
-            Bitmap result = new Bitmap(maxX - minX + 3, maxY - minY + 3, PixelFormat.Format32bppArgb);
-            BitmapData imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            Bitmap result = new Bitmap(maxX - minX + 3, maxY - minY + 3, PixelFormat.Format32bppPArgb);
+            BitmapData imgData = img.LockBits(new Rectangle(0, 0, img.Width, img.Height), 
+                ImageLockMode.ReadOnly, img.PixelFormat);
             BitmapData resultData = result.LockBits(new Rectangle(0, 0, result.Width, result.Height),
                 ImageLockMode.ReadWrite, result.PixelFormat);
 
